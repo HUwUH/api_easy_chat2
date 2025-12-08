@@ -1,0 +1,24 @@
+# Logs
+gemini3-assistant-build/logs
+gemini3-assistant-build/*.log
+gemini3-assistant-build/npm-debug.log*
+gemini3-assistant-build/yarn-debug.log*
+gemini3-assistant-build/yarn-error.log*
+gemini3-assistant-build/pnpm-debug.log*
+gemini3-assistant-build/lerna-debug.log*
+
+gemini3-assistant-build/node_modules
+gemini3-assistant-build/dist
+gemini3-assistant-build/dist-ssr
+gemini3-assistant-build/*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
