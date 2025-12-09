@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+// src/App.tsx
+import { useEffect } from "react";
 import { useChatStore } from "./store/chatStore";
+import { MessageBubble } from "./components/Chat/MessageBubble";
+import { BubbleInserter } from "./components/Chat/BubbleInserter";
 
 function App() {
-  // 从 Store 中提取状态和方法
   const { 
     sessions, 
     currentSessionId, 
@@ -12,91 +14,56 @@ function App() {
     deleteMessage 
   } = useChatStore();
 
-  const [hasInitialized, setHasInitialized] = useState(false);
-
-  // 初始化：如果没有会话，创建一个
   useEffect(() => {
-    // 稍微延迟一下等待 IndexedDB 读取
     const timer = setTimeout(() => {
-        setHasInitialized(true);
         if (!currentSessionId && Object.keys(sessions).length === 0) {
-            createSession("默认会话");
+            createSession("New Chat");
+            addMessage({ role: 'system', content: 'You are a helpful AI assistant.', index: 0 });
         }
     }, 100);
     return () => clearTimeout(timer);
-  }, [currentSessionId, sessions, createSession]);
+  }, [currentSessionId, sessions, createSession, addMessage]);
 
   const currentSession = currentSessionId ? sessions[currentSessionId] : null;
+  const messages = currentSession?.messages || [];
 
-  if (!hasInitialized) return <div className="p-10">Loading Storage...</div>;
+  // 🔴 移除了所有 scrollIntoView 相关的 useEffect 和 ref
 
   return (
-    <div className="p-10 max-w-4xl mx-auto font-mono">
-      <h1 className="text-2xl font-bold mb-4 border-b pb-2">Phase 2: Memory Test</h1>
-      
-      {/* 状态展示区 */}
-      <div className="mb-6 bg-gray-100 p-4 rounded text-sm">
-        <p>Current Session ID: {currentSessionId || "None"}</p>
-        <p>Total Messages: {currentSession?.messages.length || 0}</p>
-      </div>
+    <div className="h-screen w-screen bg-gray-50 flex flex-col items-center">
+      <header className="w-full bg-white border-b p-4 flex justify-between items-center shadow-sm sticky top-0 z-50">
+        <h1 className="font-bold text-gray-700">Workbench</h1>
+        <div className="text-xs text-gray-400">
+            {messages.length} messages
+        </div>
+      </header>
 
-      {/* 1. 操作区 */}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        <button 
-          onClick={() => createSession(`Session ${Date.now()}`)}
-          className="px-3 py-1 bg-green-600 text-white rounded"
-        >
-          New Session
-        </button>
-        
-        <button 
-          onClick={() => addMessage({ role: 'user', content: 'User Hello' })}
-          className="px-3 py-1 bg-blue-600 text-white rounded"
-        >
-          + Add User
-        </button>
+      <main className="flex-1 w-full max-w-3xl p-4 overflow-y-auto pb-32">
+        <BubbleInserter 
+            onInsert={(role) => addMessage({ role, index: 0 })} 
+            className="mb-4"
+        />
 
-        <button 
-          onClick={() => addMessage({ role: 'assistant', content: 'AI Reply' })}
-          className="px-3 py-1 bg-purple-600 text-white rounded"
-        >
-          + Add AI
-        </button>
-
-        <button 
-          onClick={() => addMessage({ role: 'system', content: 'System Note', index: 0 })}
-          className="px-3 py-1 bg-gray-600 text-white rounded"
-        >
-          + Insert System at Top
-        </button>
-      </div>
-
-      {/* 2. 数据可视化区 (模拟气泡列表) */}
-      <div className="space-y-4">
-        {currentSession?.messages.map((msg, index) => (
-          <div key={msg.id} className="border p-3 rounded shadow-sm flex flex-col gap-2">
-            <div className="flex justify-between text-xs text-gray-500 uppercase font-bold">
-              <span>{index}. {msg.role}</span>
-              <span>ID: {msg.id.slice(0, 8)}...</span>
-            </div>
-            
-            {/* 内容编辑测试 */}
-            <textarea 
-              className="w-full border p-2 rounded"
-              value={msg.content}
-              onChange={(e) => updateMessage(msg.id, { content: e.target.value })}
+        {messages.map((msg, index) => (
+          <div key={msg.id}>
+            <MessageBubble 
+              message={msg}
+              onUpdate={(id, content) => updateMessage(id, { content })}
+              onRoleChange={(id, role) => updateMessage(id, { role })}
+              onDelete={(id) => deleteMessage(id)}
             />
-
-            {/* 角色切换测试 */}
-            <div className="flex gap-2 text-xs">
-              <button onClick={() => updateMessage(msg.id, { role: 'user' })} className="text-blue-500">[To User]</button>
-              <button onClick={() => updateMessage(msg.id, { role: 'assistant' })} className="text-purple-500">[To AI]</button>
-              <button onClick={() => updateMessage(msg.id, { role: 'note' })} className="text-yellow-600">[To Note]</button>
-              <button onClick={() => deleteMessage(msg.id)} className="text-red-500 ml-auto">[Delete]</button>
-            </div>
+            <BubbleInserter 
+                onInsert={(role) => addMessage({ role, index: index + 1 })} 
+            />
           </div>
         ))}
-      </div>
+        
+        {/* 🔴 移除了底部的 <div ref={bottomRef} /> */}
+      </main>
+
+      <footer className="fixed bottom-0 w-full bg-white border-t p-4 text-center text-gray-400 text-sm z-50">
+        [Control Bar Coming Soon in Phase 4]
+      </footer>
     </div>
   );
 }
