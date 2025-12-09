@@ -22,3 +22,6 @@ gemini3-assistant-build/*.local
 *.njsproj
 *.sln
 *.sw?
+
+# 我的
+个人的程序制作记录.txt
