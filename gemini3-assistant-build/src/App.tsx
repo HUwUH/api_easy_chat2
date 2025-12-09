@@ -5,6 +5,8 @@ import { MessageBubble } from "./components/Chat/MessageBubble";
 import { BubbleInserter } from "./components/Chat/BubbleInserter";
 import { ControlBar } from "./components/Layout/ControlBar";
 import { Sidebar } from "./components/Layout/Sidebar";
+import { SettingsModal } from "./components/Settings/SettingsModal"; // 🟢 引入
+import { downloadJson, getDateString } from "./lib/export"; // 🟢 引入
 
 function App() {
   const { 
@@ -32,19 +34,17 @@ function App() {
   const currentSession = currentSessionId ? sessions[currentSessionId] : null;
   const messages = currentSession?.messages || [];
 
-  // 🟢 单个会话导出逻辑 (占位)
+  // 🟢 实现单个会话导出
   const handleExportSingle = () => {
     if (!currentSession) return;
-    const dataStr = JSON.stringify(currentSession, null, 2);
-    // 这里简单弹个窗示意，后续实现下载文件
-    alert("Export Feature Ready!\nData ready for download."); 
-    console.log(dataStr);
+    // 导出文件名：SessionTitle_Date.json
+    const safeTitle = currentSession.title.replace(/[^a-z0-9]/gi, '_').slice(0, 20);
+    downloadJson(currentSession, `${safeTitle}_${getDateString()}`);
   };
 
-  // 🟢 打开设置 (占位)
+  // 🟢 打开设置
   const handleOpenSettings = () => {
-    // setIsSettingsOpen(true);
-    alert("Global Settings & Full Export \n(Coming in Next Step)");
+    setIsSettingsOpen(true); // 打开弹窗
   };
 
   return (
@@ -87,6 +87,7 @@ function App() {
               onClick={handleExportSingle}
               className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition-colors"
               title="Export this chat (JSON)"
+              disabled={!currentSession} // 没有会话时禁用
             >
               <Download size={18} />
             </button>
@@ -129,8 +130,11 @@ function App() {
         
       </div>
 
-      {/* 3. 设置弹窗 (Settings Modal) 将在这里渲染 */}
-      {/* {isSettingsOpen && <SettingsModal ... />} */}
+      {/* 3. 🟢 挂载 Settings Modal */}
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+      />
     </div>
   );
 }
