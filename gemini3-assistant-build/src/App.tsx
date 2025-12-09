@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useChatStore } from "./store/chatStore";
 import { MessageBubble } from "./components/Chat/MessageBubble";
 import { BubbleInserter } from "./components/Chat/BubbleInserter";
+import { ControlBar } from "./components/Layout/ControlBar"; // 🟢 引入
 
 function App() {
   const { 
@@ -27,10 +28,9 @@ function App() {
   const currentSession = currentSessionId ? sessions[currentSessionId] : null;
   const messages = currentSession?.messages || [];
 
-  // 🔴 移除了所有 scrollIntoView 相关的 useEffect 和 ref
-
   return (
     <div className="h-screen w-screen bg-gray-50 flex flex-col items-center">
+      {/* Header */}
       <header className="w-full bg-white border-b p-4 flex justify-between items-center shadow-sm sticky top-0 z-50">
         <h1 className="font-bold text-gray-700">Workbench</h1>
         <div className="text-xs text-gray-400">
@@ -38,6 +38,7 @@ function App() {
         </div>
       </header>
 
+      {/* Main Chat Area */}
       <main className="flex-1 w-full max-w-3xl p-4 overflow-y-auto pb-32">
         <BubbleInserter 
             onInsert={(role) => addMessage({ role, index: 0 })} 
@@ -57,13 +58,11 @@ function App() {
             />
           </div>
         ))}
-        
-        {/* 🔴 移除了底部的 <div ref={bottomRef} /> */}
       </main>
 
-      <footer className="fixed bottom-0 w-full bg-white border-t p-4 text-center text-gray-400 text-sm z-50">
-        [Control Bar Coming Soon in Phase 4]
-      </footer>
+      {/* 🟢 Control Bar */}
+      <ControlBar />
+      
     </div>
   );
 }

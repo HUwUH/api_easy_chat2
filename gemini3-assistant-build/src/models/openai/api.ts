@@ -29,7 +29,8 @@ export const OpenAIProvider: LLMProvider = {
   chat: async (
     messages: Message[],
     config: ModelConfig,
-    callbacks
+    callbacks,
+    options // 🟢 接收 options
   ) => {
     const { onUpdate, onFinish, onError } = callbacks;
     const settings = config.settings;
@@ -53,13 +54,17 @@ export const OpenAIProvider: LLMProvider = {
       // 3. 发起请求
       const response = await fetch(`${settings.endpoint}/chat/completions`, {
         method: "POST",
-        headers,
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${settings.apiKey}`,
+        },
         body: JSON.stringify({
           model: settings.modelName,
-          messages: apiMessages,
+          messages: apiMessages, // DeepSeek/OpenAI 会自动处理最后一条是 assistant 的情况
           temperature: settings.temperature,
-          stream: true, // 强制开启流式
+          stream: true,
         }),
+        signal: options?.signal, // 🟢 将信号传给 fetch
       });
 
       if (!response.ok) {

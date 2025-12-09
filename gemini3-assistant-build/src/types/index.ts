@@ -59,19 +59,20 @@ export interface ModelConfig {
  */
 export interface LLMProvider {
   id: ProviderId;
-  name: string; // 模板名称
-  
-  // 获取默认配置
+  name: string; 
   getDefaultSettings: () => ModelConfig['settings'];
   
-  // 核心对话方法
   chat: (
     messages: Message[], 
     config: ModelConfig,
     callbacks: {
-      onUpdate: (content: string) => void;     // 流式更新
-      onFinish: (fullContent: string) => void; // 完成
-      onError: (error: string) => void;        // 报错
+      onUpdate: (content: string) => void; 
+      onFinish: (fullContent: string) => void;
+      onError: (error: string) => void;
+    },
+    // 🟢 新增这个参数
+    options?: {
+      signal?: AbortSignal;
     }
   ) => Promise<void>;
 }
