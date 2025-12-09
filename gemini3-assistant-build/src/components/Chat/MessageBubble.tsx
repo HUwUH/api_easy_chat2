@@ -1,4 +1,3 @@
-// src/components/Chat/MessageBubble.tsx
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -8,6 +7,7 @@ import { Trash2, Edit2, RotateCcw, Check, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { AutoResizeTextarea } from '../ui/AutoResizeTextarea';
 import type { Message, MessageRole } from '../../types';
+import { useChatStore } from '../../store/chatStore'; // 🟢 引入 store
 
 interface MessageBubbleProps {
   message: Message;
@@ -19,6 +19,9 @@ interface MessageBubbleProps {
 export function MessageBubble({ message, onUpdate, onRoleChange, onDelete }: MessageBubbleProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
+  
+  // 🟢 修复 Bug 2：从 store 获取生成状态
+  const isGenerating = useChatStore((state) => state.isGenerating);
 
   const bubbleStyle = {
     user: "ml-auto bg-blue-50 border-blue-100 text-gray-800 rounded-tr-sm",
@@ -38,6 +41,12 @@ export function MessageBubble({ message, onUpdate, onRoleChange, onDelete }: Mes
     think: "justify-center"
   };
 
+  // 🟢 修复 Bug 3：点击编辑时，强制同步最新内容
+  const startEditing = () => {
+    setEditContent(message.content); // 这一步很关键
+    setIsEditing(true);
+  };
+
   const handleSave = () => {
     if (editContent.trim() !== message.content) {
       onUpdate(message.id, editContent);
@@ -46,7 +55,6 @@ export function MessageBubble({ message, onUpdate, onRoleChange, onDelete }: Mes
   };
 
   const handleCancel = () => {
-    setEditContent(message.content);
     setIsEditing(false);
   };
 
@@ -60,10 +68,15 @@ export function MessageBubble({ message, onUpdate, onRoleChange, onDelete }: Mes
       >
         <div className="flex justify-between items-center mb-1 opacity-50 text-[10px] uppercase tracking-wider font-bold">
           <span>{message.role}</span>
-          <div className={cn("flex gap-2 transition-opacity", isEditing ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
+          
+          {/* 🟢 修复 Bug 2：生成中隐藏按钮 */}
+          <div className={cn("flex gap-2 transition-opacity", 
+              isEditing ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+              isGenerating ? "hidden" : "" // 生成时强制隐藏
+          )}>
             {!isEditing && (
               <>
-                <button onClick={() => setIsEditing(true)} title="Edit"><Edit2 size={12} /></button>
+                <button onClick={startEditing} title="Edit"><Edit2 size={12} /></button>
                 <button onClick={() => onDelete(message.id)} title="Delete" className="hover:text-red-500"><Trash2 size={12} /></button>
                 <button 
                   onClick={() => {
@@ -82,11 +95,12 @@ export function MessageBubble({ message, onUpdate, onRoleChange, onDelete }: Mes
 
         {isEditing ? (
           <div className="w-full min-w-[200px]">
+            {/* 🟢 修复 Bug 4：去掉了 autoFocus，防止浏览器自动滚动定位。
+                AutoResizeTextarea 本身只调整 height，如果不 focus 应该不会乱跳 */}
             <AutoResizeTextarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               className="text-sm font-mono leading-relaxed min-h-[60px]"
-              autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && e.ctrlKey) handleSave();
                 if (e.key === 'Escape') handleCancel();
@@ -102,22 +116,14 @@ export function MessageBubble({ message, onUpdate, onRoleChange, onDelete }: Mes
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                // --- 修复样式开始 ---
-                // 列表
                 ul: ({children}) => <ul className="list-disc pl-5 my-2 space-y-1">{children}</ul>,
                 ol: ({children}) => <ol className="list-decimal pl-5 my-2 space-y-1">{children}</ol>,
                 li: ({children}) => <li className="pl-1">{children}</li>,
-                // 标题
                 h1: ({children}) => <h1 className="text-xl font-bold my-3 pb-1 border-b">{children}</h1>,
                 h2: ({children}) => <h2 className="text-lg font-bold my-2">{children}</h2>,
                 h3: ({children}) => <h3 className="text-base font-bold my-1">{children}</h3>,
-                // 引用
                 blockquote: ({children}) => <blockquote className="border-l-4 border-gray-300 pl-3 my-2 text-gray-500 italic">{children}</blockquote>,
-                // 链接
                 a: ({children, href}) => <a href={href} className="text-blue-500 hover:underline" target="_blank">{children}</a>,
-                // --- 修复样式结束 ---
-
-                // 代码块保持不变
                 code({ node, inline, className, children, ...props }: any) {
                   const match = /language-(\w+)/.exec(className || '');
                   return !inline && match ? (
