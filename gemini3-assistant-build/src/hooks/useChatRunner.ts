@@ -67,7 +67,7 @@ export function useChatRunner() {
             // 此时 targetMessageId 与 Store 中的 ID 绝对一致
             updateMessage(targetMessageId, { content: accumulatedContent });
           },
-          onFinish: (full) => {
+          onFinish: (_full) => {
             setGenerating(false);
           },
           onError: (err) => {

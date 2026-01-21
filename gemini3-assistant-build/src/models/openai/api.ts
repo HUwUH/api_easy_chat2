@@ -36,13 +36,8 @@ export const OpenAIProvider: LLMProvider = {
     const settings = config.settings;
 
     try {
-      // 1. 准备请求头
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${settings.apiKey}`,
-      };
 
-      // 2. 准备消息列表 (过滤掉不需要发送给 API 的类型)
+      // 1. 准备消息列表 (过滤掉不需要发送给 API 的类型)
       // 注意：DeepSeek 支持 Assistant Prefill (最后一条是 assistant)，所以我们不需要过滤最后的 assistant
       const apiMessages = messages
         .filter((m) => ["system", "user", "assistant"].includes(m.role))
@@ -51,7 +46,7 @@ export const OpenAIProvider: LLMProvider = {
           content: m.content,
         }));
 
-      // 3. 发起请求
+      // 2. 发起请求
       const response = await fetch(`${settings.endpoint}/chat/completions`, {
         method: "POST",
         headers: {
@@ -76,7 +71,7 @@ export const OpenAIProvider: LLMProvider = {
         throw new Error("Response body is empty");
       }
 
-      // 4. 处理流式响应 (重点！)
+      // 3. 处理流式响应 (重点！)
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let fullContent = "";
@@ -122,7 +117,7 @@ export const OpenAIProvider: LLMProvider = {
         }
       }
 
-      // 5. 完成
+      // 4. 完成
       onFinish(fullContent);
 
     } catch (err: any) {

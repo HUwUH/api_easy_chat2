@@ -32,7 +32,7 @@ interface ChatState {
 
 export const useChatStore = create<ChatState>()(
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       sessions: {},
       currentSessionId: null,
       modelConfigs: [],
